@@ -46,13 +46,13 @@ def parse_credentials(headers):
 
 
 def server_credentials_available():
-    from src.deployment import air_gap_enabled, vllm_settings
-    if os.getenv('LLM_PROVIDER', '').strip().lower() == 'vllm':
+    from src.deployment import server_model_enabled, configured_model_settings
+    if server_model_enabled():
         try:
-            vllm_settings()
+            configured_model_settings()
         except ValueError:
             return False
-        return air_gap_enabled() or bool(os.getenv('TYPESAFE_API_KEY', '').strip())
+        return True
     model = os.environ.get('LLM_MODEL', 'chat-latest').strip()
     key = 'ANTHROPIC_API_KEY' if model.startswith('claude-') else 'OPENAI_API_KEY'
     return bool(os.environ.get(key, '').strip() and os.environ.get('TYPESAFE_API_KEY', '').strip())
@@ -65,8 +65,8 @@ class CredentialsMiddleware:
     async def __call__(self, scope, receive, send):
         if scope['type'] != 'http':
             return await self.app(scope, receive, send)
-        from src.deployment import air_gap_enabled
-        offline = air_gap_enabled()
+        from src.deployment import air_gap_enabled, server_model_enabled
+        offline = air_gap_enabled() or server_model_enabled()
         if offline and (scope['path'] == '/credentials/validate' or any(
             k.lower() in SENSITIVE_HEADERS for k, _ in scope.get('headers', [])
         )):

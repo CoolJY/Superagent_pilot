@@ -5,7 +5,7 @@ import { ProviderKeysDialog } from "@/components/chat/provider-keys-dialog";
 import { useProviderKeys } from "@/components/chat/provider-keys";
 import { KeyGatedChatView } from "@/components/chat/key-gated-chat-view";
 import Image from "next/image";
-import { AIR_GAP_MODE } from "@/lib/deployment";
+import { SERVER_MANAGED_MODEL, MODEL_LABEL } from "@/lib/deployment";
 import { ReaderScrollView } from "@/components/chat/reader-scroll-view";
 import { AnswerMarkdown } from "@/components/chat/answer-markdown";
 import {
@@ -87,10 +87,10 @@ export default function HomePage() {
           <button type="button" onClick={newChat} disabled={agent.isRunning || retrying}>
             New chat
           </button>
-          {!AIR_GAP_MODE && <button type="button" onClick={() => setKeysOpen(true)} disabled={agent.isRunning || retrying} aria-haspopup="dialog">
+          {!SERVER_MANAGED_MODEL && <button type="button" onClick={() => setKeysOpen(true)} disabled={agent.isRunning || retrying} aria-haspopup="dialog">
             API keys{hasKeys ? " •" : ""}
           </button>}
-          {!AIR_GAP_MODE && <><a
+          {!SERVER_MANAGED_MODEL && <><a
             href="https://github.com/CopilotKit/OpenIntelligentUI"
             target="_blank"
             rel="noopener noreferrer"
@@ -111,10 +111,10 @@ export default function HomePage() {
               priority
             />
           </a></>}
-          {AIR_GAP_MODE && <span>Internal AI</span>}
+          {SERVER_MANAGED_MODEL && <span>{MODEL_LABEL}</span>}
         </nav>
       </header>
-      {!AIR_GAP_MODE && keysOpen && <ProviderKeysDialog onClose={() => setKeysOpen(false)} disabled={agent.isRunning || retrying} />}
+      {!SERVER_MANAGED_MODEL && keysOpen && <ProviderKeysDialog onClose={() => setKeysOpen(false)} disabled={agent.isRunning || retrying} />}
       <main id="main-content" className="chat-main">
         {error && (
           <div className="chat-error" role="alert">
@@ -126,7 +126,7 @@ export default function HomePage() {
             >
               Retry answer
             </button>
-            {!AIR_GAP_MODE && <button type="button" className="provider-keys-recover" disabled={retrying || agent.isRunning} onClick={() => setKeysOpen(true)}>API keys</button>}
+            {!SERVER_MANAGED_MODEL && <button type="button" className="provider-keys-recover" disabled={retrying || agent.isRunning} onClick={() => setKeysOpen(true)}>API keys</button>}
           </div>
         )}
         <div className="chat-content" ref={chatRoot}>

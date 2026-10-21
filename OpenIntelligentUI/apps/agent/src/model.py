@@ -20,18 +20,16 @@ MAX_TOKENS = 64000
 
 
 def build_model(*, allow_unconfigured: bool = False) -> BaseChatModel:
-    from src.deployment import air_gap_enabled, vllm_settings
+    from src.deployment import air_gap_enabled, configured_model_settings
 
     provider = os.getenv("LLM_PROVIDER", "auto").strip().lower()
     if air_gap_enabled() and provider != "vllm":
         raise ValueError("AIR_GAP_MODE requires LLM_PROVIDER=vllm.")
-    if provider == "vllm":
+    if provider in {"openai", "vllm"}:
         from langchain_openai import ChatOpenAI
         from openai import OpenAI, AsyncOpenAI, DefaultHttpxClient, DefaultAsyncHttpxClient
 
-        model_name, base_url = vllm_settings()
-        # Local endpoints may have no authentication; never inherit a cloud key.
-        key = os.getenv("VLLM_API_KEY", "").strip() or "EMPTY"
+        model_name, base_url, key = configured_model_settings()
         options = dict(api_key=key, base_url=base_url, organization="", project="",
                        default_headers={"Authorization": f"Bearer {key}"},
                        timeout=120.0, max_retries=1)
@@ -50,7 +48,7 @@ def build_model(*, allow_unconfigured: bool = False) -> BaseChatModel:
             root_async_client=async_client, async_client=async_client.chat.completions,
         )
     if provider != "auto":
-        raise ValueError("LLM_PROVIDER must be auto or vllm.")
+        raise ValueError("LLM_PROVIDER must be auto, openai or vllm.")
     model_name = os.environ.get("LLM_MODEL", DEFAULT_MODEL).strip()
     is_openai = model_name == "chat-latest" or model_name.startswith("gpt-")
     if not is_openai and not model_name.startswith("claude-"):
@@ -93,9 +91,9 @@ class UnconfiguredModel(BaseChatModel):
 
 def request_model(fallback):
     from src.credentials import current_credentials
-    from src.deployment import air_gap_enabled
+    from src.deployment import air_gap_enabled, server_model_enabled
     credentials = current_credentials.get()
-    if air_gap_enabled() or credentials is None:
+    if air_gap_enabled() or server_model_enabled() or credentials is None:
         return fallback
     from langchain_openai import ChatOpenAI
     from openai import AsyncOpenAI, OpenAI, DefaultAsyncHttpxClient, DefaultHttpxClient

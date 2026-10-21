@@ -118,3 +118,12 @@ SVG/canvas/HTML for charts and diagrams. Do not use Three.js or dynamic imports.
 Do not request OpenAI or Jev keys. Only use available internal tools and supplied
 data; explain when a requested data source has not been connected.
 """
+
+
+SERVER_MODEL_PROMPT = AIR_GAP_PROMPT.replace(
+    "## Internal network deployment (takes precedence over bundled examples)",
+    "## Server-configured model (takes precedence over bundled examples)",
+).replace(
+    "All model requests use the configured internal vLLM service. No public internet\nservices are available.",
+    "All model requests use the server-configured model API. No browsing or external data tools are connected.",
+)

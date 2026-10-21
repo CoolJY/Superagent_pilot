@@ -4,7 +4,7 @@ import "@testing-library/jest-dom/vitest";
 import type { ComponentProps } from "react";
 import type { CopilotChatView } from "@copilotkit/react-core/v2";
 
-vi.mock("@/lib/deployment", () => ({ AIR_GAP_MODE: true }));
+vi.mock("@/lib/deployment", () => ({ SERVER_MANAGED_MODEL: true }));
 vi.mock("@copilotkit/react-core/v2", () => ({
   CopilotChatView: (props: ComponentProps<typeof CopilotChatView>) => <>
     <input aria-label="Message" value={props.inputValue} onChange={(event) => props.onInputChange?.(event.target.value)} />

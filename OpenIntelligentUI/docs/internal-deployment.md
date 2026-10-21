@@ -1,5 +1,7 @@
 # Superagent Pilot 내부망 배포
 
+현재 개발 기본값은 ChatGPT입니다. 먼저 [모델 설정 가이드](model-configuration.md)를 참고하세요. 아래는 향후 vLLM 전환용 설정입니다.
+
 ## 이번 구현 범위
 
 `requirements.txt`의 첫 단계로, 기존 채팅과 스트리밍 생성 UI를 내부 vLLM에 연결합니다.
@@ -13,21 +15,21 @@
 ## 1. 에이전트 설정
 
 `apps/agent/.env`에 다음을 설정합니다. 실제 주소와 모델 이름으로 교체하세요.
-`OPENAI_BASE_URL`은 `/v1`까지 포함하며 `/chat/completions`는 붙이지 않습니다.
+`LLM_BASE_URL`은 `/v1`까지 포함하며 `/chat/completions`는 붙이지 않습니다.
 
 ```dotenv
 AIR_GAP_MODE=true
 LLM_PROVIDER=vllm
-OPENAI_BASE_URL=http://vllm.internal:8000/v1
+LLM_BASE_URL=http://vllm.internal:8000/v1
 LLM_MODEL=your-served-model-name
-VLLM_API_KEY=
+LLM_API_KEY=
 LANGSMITH_TRACING=false
 LANGCHAIN_TRACING_V2=false
 DO_NOT_TRACK=1
 COPILOTKIT_TELEMETRY_DISABLED=true
 ```
 
-인증을 사용하는 내부 서버만 `VLLM_API_KEY`를 설정합니다. 키는 브라우저에 전달하지
+인증을 사용하는 내부 서버만 `LLM_API_KEY`를 설정합니다. 키는 브라우저에 전달하지
 않으며, OpenAI용 환경변수의 키나 프록시를 상속하지 않습니다. 인증 없는 서버에는
 SDK 형식 요건을 충족하는 `EMPTY` 값이 사용됩니다. 모델 이름의 접두사 제한은 없습니다.
 주소·모델 설정이 없으면 시작 단계에서 오류를 내며 공개 클라우드로 우회하지 않습니다.
@@ -43,6 +45,8 @@ vLLM은 스트리밍 Chat Completions와 도구 호출을 지원하도록 설정
 
 ```dotenv
 NEXT_PUBLIC_AIR_GAP_MODE=true
+NEXT_PUBLIC_SERVER_MANAGED_MODEL=true
+NEXT_PUBLIC_MODEL_LABEL=Internal AI
 LANGGRAPH_DEPLOYMENT_URL=http://127.0.0.1:8123
 NEXT_TELEMETRY_DISABLED=1
 DO_NOT_TRACK=1

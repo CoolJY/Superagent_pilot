@@ -29,7 +29,9 @@ Use the existing validated `Websandbox.connection.remote.sendPrompt({ text })` a
 
 ## Configuration and checks
 
-Superagent Pilot internal profile: `AIR_GAP_MODE=true`, `LLM_PROVIDER=vllm`, explicit `OPENAI_BASE_URL` ending in `/v1`, and `LLM_MODEL` matching the served model. `VLLM_API_KEY` is optional. Frontend builds require `NEXT_PUBLIC_AIR_GAP_MODE=true`. See `docs/internal-deployment.md`.
+Superagent Pilot defaults to the server-managed OpenAI profile: `LLM_PROVIDER=openai`, `LLM_BASE_URL=https://api.openai.com/v1`, `LLM_MODEL=chat-latest`, `LLM_API_KEY` in the ignored agent `.env`. See `docs/model-configuration.md`.
+
+Superagent Pilot internal profile: `AIR_GAP_MODE=true`, `LLM_PROVIDER=vllm`, explicit `LLM_BASE_URL` ending in `/v1`, and `LLM_MODEL` matching the served model. `LLM_API_KEY` is optional for unauthenticated vLLM only. Frontend builds require `NEXT_PUBLIC_AIR_GAP_MODE=true`. See `docs/internal-deployment.md`.
 
 For the legacy cloud profile, the local default model is `chat-latest` (ChatGPT Instant). `claude-*` requires `ANTHROPIC_API_KEY`; `chat-latest` and `gpt-*` require `OPENAI_API_KEY`. Jev routing requires `TYPESAFE_API_KEY`. Do not invent native model APIs or silently change pinned model IDs. See `render.yaml` for its separate explicit deployment model setting.
 
