@@ -78,3 +78,10 @@ def test_server_config_cannot_be_overridden_by_browser_credentials(openai_env):
         assert request_model(model) is model
     finally:
         current_credentials.reset(token)
+
+
+@pytest.mark.parametrize('timeout', ['0', '-1', 'nan', 'inf'])
+def test_invalid_request_timeout_is_rejected(openai_env, monkeypatch, timeout):
+    monkeypatch.setenv('LLM_TIMEOUT_SECONDS', timeout)
+    with pytest.raises(ValueError, match='LLM_TIMEOUT_SECONDS'):
+        build_model()

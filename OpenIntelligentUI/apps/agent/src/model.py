@@ -30,9 +30,13 @@ def build_model(*, allow_unconfigured: bool = False) -> BaseChatModel:
         from openai import OpenAI, AsyncOpenAI, DefaultHttpxClient, DefaultAsyncHttpxClient
 
         model_name, base_url, key = configured_model_settings()
+        # Large local models can spend minutes processing the initial tool context.
+        timeout = float(os.getenv("LLM_TIMEOUT_SECONDS", "600" if provider == "ollama" else "120"))
+        if not 0 < timeout < float("inf"):
+            raise ValueError("LLM_TIMEOUT_SECONDS must be a positive finite number.")
         options = dict(api_key=key, base_url=base_url, organization="", project="",
                        default_headers={"Authorization": f"Bearer {key}"},
-                       timeout=120.0, max_retries=1)
+                       timeout=timeout, max_retries=1)
         sync = OpenAI(**options, http_client=DefaultHttpxClient(trust_env=False, follow_redirects=False))
         async_client = AsyncOpenAI(**options, http_client=DefaultAsyncHttpxClient(trust_env=False, follow_redirects=False))
         for client in (sync, async_client):

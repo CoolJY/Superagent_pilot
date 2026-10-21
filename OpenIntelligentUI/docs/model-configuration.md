@@ -85,6 +85,9 @@ LLM_MODEL=qwen3.8:27b
 LLM_API_KEY=
 ```
 
+Ollama 요청 대기 시간은 기본 600초이며 `LLM_TIMEOUT_SECONDS`로 조절할 수 있습니다.
+처음에는 도구와 스킬 안내를 읽는 과정 때문에 응답 시작이 오래 걸릴 수 있습니다.
+
 웹 앱의 `NEXT_PUBLIC_MODEL_LABEL`은 `Ollama · qwen3.8:27b`로 설정할 수 있습니다.
 도구 호출을 지원하는 모델이 필요합니다. Ollama 연결도 동일한 서버 설정 파일에서 관리합니다.
 API 형식은 [Ollama 공식 문서](https://docs.ollama.com/api/openai-compatibility)를 따릅니다.
