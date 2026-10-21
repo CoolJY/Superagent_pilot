@@ -85,3 +85,47 @@ def test_invalid_request_timeout_is_rejected(openai_env, monkeypatch, timeout):
     monkeypatch.setenv('LLM_TIMEOUT_SECONDS', timeout)
     with pytest.raises(ValueError, match='LLM_TIMEOUT_SECONDS'):
         build_model()
+
+
+def test_gemini_stream_uses_google_endpoint_and_its_own_key(openai_env, monkeypatch):
+    monkeypatch.setenv('LLM_PROVIDER', 'gemini')
+    monkeypatch.setenv('LLM_BASE_URL', 'https://generativelanguage.googleapis.com/v1beta/openai')
+    monkeypatch.setenv('LLM_MODEL', 'gemini-3.5-flash-lite')
+    monkeypatch.setenv('GEMINI_API_KEY', 'gemini-test-key')
+    monkeypatch.setenv('LLM_API_KEY', 'stale-openai-key')
+
+    async def send(client, request, **kwargs):
+        assert str(request.url) == 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions'
+        assert request.headers['authorization'] == 'Bearer gemini-test-key'
+        payload = json.loads(request.content)
+        assert payload['model'] == 'gemini-3.5-flash-lite'
+        assert payload['tools'][0]['function']['name'] == 'lookup'
+        chunk = {'id': 'test', 'object': 'chat.completion.chunk', 'created': 1, 'model': 'gemini-3.5-flash-lite', 'choices': [{'index': 0, 'delta': {'role': 'assistant', 'tool_calls': [{'index': 0, 'id': 'call_1', 'type': 'function', 'function': {'name': 'lookup', 'arguments': '{"topic":"local"}'}}]}, 'finish_reason': None}]}
+        return httpx.Response(200, request=request, content=('data: ' + json.dumps(chunk) + '\n\ndata: [DONE]\n\n').encode(), headers={'content-type': 'text/event-stream'})
+
+    monkeypatch.setattr(httpx.AsyncClient, 'send', send)
+    tool = {'type': 'function', 'function': {'name': 'lookup', 'description': 'Lookup internal data', 'parameters': {'type': 'object', 'properties': {'topic': {'type': 'string'}}, 'required': ['topic']}}}
+    async def run():
+        return [chunk async for chunk in build_model().bind_tools([tool]).astream('Look up local data')]
+    chunks = asyncio.run(run())
+    combined = chunks[0]
+    for chunk in chunks[1:]:
+        combined += chunk
+    assert combined.tool_calls[0]['args'] == {'topic': 'local'}
+
+
+def test_gemini_missing_key_does_not_use_openai_key(openai_env, monkeypatch):
+    monkeypatch.setenv('LLM_PROVIDER', 'gemini')
+    monkeypatch.setenv('LLM_BASE_URL', 'https://generativelanguage.googleapis.com/v1beta/openai')
+    monkeypatch.delenv('GEMINI_API_KEY', raising=False)
+    with pytest.raises(ValueError, match='GEMINI_API_KEY'):
+        build_model(allow_unconfigured=True)
+
+
+@pytest.mark.parametrize('url', ['https://api.openai.com/v1', 'http://generativelanguage.googleapis.com/v1beta/openai', 'https://generativelanguage.googleapis.com/v1beta/openai/other'])
+def test_gemini_rejects_wrong_destination(openai_env, monkeypatch, url):
+    monkeypatch.setenv('LLM_PROVIDER', 'gemini')
+    monkeypatch.setenv('LLM_BASE_URL', url)
+    monkeypatch.setenv('GEMINI_API_KEY', 'gemini-test-key')
+    with pytest.raises(ValueError, match='Gemini LLM_BASE_URL'):
+        build_model()

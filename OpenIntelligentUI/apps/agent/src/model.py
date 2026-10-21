@@ -25,7 +25,7 @@ def build_model(*, allow_unconfigured: bool = False) -> BaseChatModel:
     provider = os.getenv("LLM_PROVIDER", "auto").strip().lower()
     if air_gap_enabled() and provider not in {"vllm", "ollama"}:
         raise ValueError("AIR_GAP_MODE requires LLM_PROVIDER=vllm or ollama.")
-    if provider in {"openai", "vllm", "ollama"}:
+    if provider in {"openai", "gemini", "vllm", "ollama"}:
         from langchain_openai import ChatOpenAI
         from openai import OpenAI, AsyncOpenAI, DefaultHttpxClient, DefaultAsyncHttpxClient
 
@@ -52,7 +52,7 @@ def build_model(*, allow_unconfigured: bool = False) -> BaseChatModel:
             root_async_client=async_client, async_client=async_client.chat.completions,
         )
     if provider != "auto":
-        raise ValueError("LLM_PROVIDER must be auto, openai, vllm or ollama.")
+        raise ValueError("LLM_PROVIDER must be auto, openai, gemini, vllm or ollama.")
     model_name = os.environ.get("LLM_MODEL", DEFAULT_MODEL).strip()
     is_openai = model_name == "chat-latest" or model_name.startswith("gpt-")
     if not is_openai and not model_name.startswith("claude-"):

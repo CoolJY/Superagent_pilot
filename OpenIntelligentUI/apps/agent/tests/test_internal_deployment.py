@@ -58,7 +58,7 @@ def test_internal_async_request_uses_configured_key(internal_env, monkeypatch):
 @pytest.mark.parametrize('url', ['', 'https://example.test', 'ftp://local/v1', 'http://user:pass@local/v1', 'http://local/v1?key=abc'])
 def test_internal_url_must_be_explicit(internal_env, monkeypatch, url):
     monkeypatch.setenv('OPENAI_BASE_URL', url)
-    with pytest.raises(ValueError, match='OPENAI_BASE_URL'):
+    with pytest.raises(ValueError, match='LLM_BASE_URL'):
         build_model(allow_unconfigured=True)
 
 
