@@ -8,6 +8,7 @@ import posthog from "posthog-js";
 // don't report page views. See docs/telemetry.md.
 export function PostHogAnalytics() {
   useEffect(() => {
+    if (process.env.NEXT_PUBLIC_AIR_GAP_MODE === "true") return;
     const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
     if (!key || posthog.__loaded) return;
     posthog.init(key, {

@@ -247,3 +247,13 @@ describe("observeRunResult", () => {
     await expect(run([sse({ type: "RUN_STARTED" }, { type: "RUN_FINISHED" })])).resolves.toBe(false);
   });
 });
+
+
+it("sends no install events in internal mode even without legacy opt-outs", async () => {
+  const send = vi.fn();
+  const telemetry = new LaunchTelemetry({ env: { NEXT_PUBLIC_AIR_GAP_MODE: "true" }, statePath, send });
+  await telemetry.recordOpened();
+  await telemetry.recordActivated();
+  expect(send).not.toHaveBeenCalled();
+  expect(existsSync(statePath)).toBe(false);
+});

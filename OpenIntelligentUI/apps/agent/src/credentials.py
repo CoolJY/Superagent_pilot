@@ -46,6 +46,13 @@ def parse_credentials(headers):
 
 
 def server_credentials_available():
+    from src.deployment import air_gap_enabled, vllm_settings
+    if os.getenv('LLM_PROVIDER', '').strip().lower() == 'vllm':
+        try:
+            vllm_settings()
+        except ValueError:
+            return False
+        return air_gap_enabled() or bool(os.getenv('TYPESAFE_API_KEY', '').strip())
     model = os.environ.get('LLM_MODEL', 'chat-latest').strip()
     key = 'ANTHROPIC_API_KEY' if model.startswith('claude-') else 'OPENAI_API_KEY'
     return bool(os.environ.get(key, '').strip() and os.environ.get('TYPESAFE_API_KEY', '').strip())
@@ -58,6 +65,12 @@ class CredentialsMiddleware:
     async def __call__(self, scope, receive, send):
         if scope['type'] != 'http':
             return await self.app(scope, receive, send)
+        from src.deployment import air_gap_enabled
+        offline = air_gap_enabled()
+        if offline and (scope['path'] == '/credentials/validate' or any(
+            k.lower() in SENSITIVE_HEADERS for k, _ in scope.get('headers', [])
+        )):
+            return await JSONResponse({'ok': False, 'code': 'byok_disabled'}, status_code=403)(scope, receive, send)
         try:
             credentials = parse_credentials(scope.get('headers', []))
         except ValueError:
@@ -68,7 +81,7 @@ class CredentialsMiddleware:
         token = current_credentials.set(credentials)
         try:
             # BYOK provider calls and graph runs must never enter hosted traces.
-            with tracing_context(enabled=False if credentials else None):
+            with tracing_context(enabled=False if credentials or offline else None):
                 await self.app(clean_scope, receive, send)
         finally:
             current_credentials.reset(token)

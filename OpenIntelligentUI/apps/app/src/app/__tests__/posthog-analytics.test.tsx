@@ -37,3 +37,10 @@ describe("PostHogAnalytics", () => {
     expect(posthog.init).not.toHaveBeenCalled();
   });
 });
+
+it("never starts analytics in internal mode even with a configured key", () => {
+  vi.stubEnv("NEXT_PUBLIC_AIR_GAP_MODE", "true");
+  vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "phc_test");
+  render(<PostHogAnalytics />);
+  expect(posthog.init).not.toHaveBeenCalled();
+});

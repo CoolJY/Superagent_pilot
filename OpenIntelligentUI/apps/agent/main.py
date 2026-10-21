@@ -7,6 +7,14 @@ import os
 import warnings
 
 from dotenv import load_dotenv
+from src.deployment import air_gap_enabled
+
+load_dotenv()
+if air_gap_enabled():
+    os.environ["LANGSMITH_TRACING"] = "false"
+    os.environ["LANGCHAIN_TRACING_V2"] = "false"
+    os.environ["DO_NOT_TRACK"] = "1"
+    os.environ["COPILOTKIT_TELEMETRY_DISABLED"] = "true"
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from copilotkit import CopilotKitMiddleware
@@ -29,24 +37,23 @@ from src.todos import AgentState, todo_tools
 from src.form import generate_form
 from src.trip_images import get_trip_stop_images
 from src.plan import plan_visualization
-from src.prompt import SYSTEM_PROMPT
-
-load_dotenv()
+from src.prompt import SYSTEM_PROMPT, AIR_GAP_PROMPT
 
 agent = create_deep_agent(
     model=CredentialScopedModel(fallback=build_model(allow_unconfigured=True)),
-    tools=[query_data, get_trip_stop_images, plan_visualization, *todo_tools, generate_form],
+    tools=[query_data, plan_visualization, *todo_tools, generate_form,
+           *([] if air_gap_enabled() else [get_trip_stop_images])],
     middleware=[
         RequestModelMiddleware(),
         CopilotKitMiddleware(),
-        JevVisualizationMiddleware(),
+        *([] if air_gap_enabled() else [JevVisualizationMiddleware()]),
         ConsecutiveSystemMessagesMiddleware(),
     ],
     context_schema=AgentState,
     skills=SKILL_SOURCES,
     backend=build_agent_backend,
     checkpointer=BoundedMemorySaver(max_threads=200),
-    system_prompt=SYSTEM_PROMPT,
+    system_prompt=AIR_GAP_PROMPT if air_gap_enabled() else SYSTEM_PROMPT,
 )
 
 app = FastAPI()

@@ -1,5 +1,7 @@
 "use client";
 
+import { AIR_GAP_MODE } from "@/lib/deployment";
+
 import { createContext, useContext, useState, type ReactNode } from "react";
 
 export type ProviderKeys = { openai: string; jev: string };
@@ -26,8 +28,8 @@ export function ProviderKeysProvider({ children }: { children: ReactNode }) {
   const newChat = () => { setDraft(""); setSession((value) => value + 1); };
   return (
     <ProviderKeysContext.Provider value={{
-      headers: keys ? { "x-openai-api-key": keys.openai, "x-jev-api-key": keys.jev } : undefined,
-      hasKeys: keys !== null,
+      headers: !AIR_GAP_MODE && keys ? { "x-openai-api-key": keys.openai, "x-jev-api-key": keys.jev } : undefined,
+      hasKeys: AIR_GAP_MODE || keys !== null,
       session,
       save: (value) => { setKeys(value); setKeysOpen(false); setSession((value) => value + 1); },
       clear: () => { setKeys(null); newChat(); },

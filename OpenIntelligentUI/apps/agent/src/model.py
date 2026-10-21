@@ -20,6 +20,37 @@ MAX_TOKENS = 64000
 
 
 def build_model(*, allow_unconfigured: bool = False) -> BaseChatModel:
+    from src.deployment import air_gap_enabled, vllm_settings
+
+    provider = os.getenv("LLM_PROVIDER", "auto").strip().lower()
+    if air_gap_enabled() and provider != "vllm":
+        raise ValueError("AIR_GAP_MODE requires LLM_PROVIDER=vllm.")
+    if provider == "vllm":
+        from langchain_openai import ChatOpenAI
+        from openai import OpenAI, AsyncOpenAI, DefaultHttpxClient, DefaultAsyncHttpxClient
+
+        model_name, base_url = vllm_settings()
+        # Local endpoints may have no authentication; never inherit a cloud key.
+        key = os.getenv("VLLM_API_KEY", "").strip() or "EMPTY"
+        options = dict(api_key=key, base_url=base_url, organization="", project="",
+                       default_headers={"Authorization": f"Bearer {key}"},
+                       timeout=120.0, max_retries=1)
+        sync = OpenAI(**options, http_client=DefaultHttpxClient(trust_env=False, follow_redirects=False))
+        async_client = AsyncOpenAI(**options, http_client=DefaultAsyncHttpxClient(trust_env=False, follow_redirects=False))
+        for client in (sync, async_client):
+            client.organization = None
+            client.project = None
+            client.admin_api_key = None
+            client.webhook_secret = None
+            client._custom_headers = {}
+        return ChatOpenAI(
+            model=model_name, api_key=key, base_url=base_url,
+            use_responses_api=False, stream_usage=False, openai_proxy="",
+            root_client=sync, client=sync.chat.completions,
+            root_async_client=async_client, async_client=async_client.chat.completions,
+        )
+    if provider != "auto":
+        raise ValueError("LLM_PROVIDER must be auto or vllm.")
     model_name = os.environ.get("LLM_MODEL", DEFAULT_MODEL).strip()
     is_openai = model_name == "chat-latest" or model_name.startswith("gpt-")
     if not is_openai and not model_name.startswith("claude-"):
@@ -62,8 +93,9 @@ class UnconfiguredModel(BaseChatModel):
 
 def request_model(fallback):
     from src.credentials import current_credentials
+    from src.deployment import air_gap_enabled
     credentials = current_credentials.get()
-    if credentials is None:
+    if air_gap_enabled() or credentials is None:
         return fallback
     from langchain_openai import ChatOpenAI
     from openai import AsyncOpenAI, OpenAI, DefaultAsyncHttpxClient, DefaultHttpxClient

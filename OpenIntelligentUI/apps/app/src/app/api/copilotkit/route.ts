@@ -3,6 +3,7 @@ import {
   ExperimentalEmptyAdapter,
   copilotRuntimeNextJSAppRouterEndpoint,
 } from "@copilotkit/runtime";
+import { AIR_GAP_MODE } from "@/lib/deployment";
 import { NextRequest, after } from "next/server";
 import { readProviderHeaders, PROVIDER_KEY_INPUT_ERROR } from "@/lib/provider-keys";
 import { buildRuntimeOptions } from "@/lib/copilotkit-runtime-options";
@@ -43,6 +44,9 @@ export const POST = async (req: NextRequest) => {
     return new Response("Too many requests", { status: 429 });
   }
 
+  if (AIR_GAP_MODE && (req.headers.has("x-openai-api-key") || req.headers.has("x-jev-api-key"))) {
+    return Response.json({ error: "Browser provider keys are disabled in internal mode." }, { status: 403 });
+  }
   let providerHeaders;
   try {
     providerHeaders = readProviderHeaders(req.headers);

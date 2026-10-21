@@ -1,3 +1,4 @@
+import { AIR_GAP_MODE } from "@/lib/deployment";
 import { TRIP_ANIMATOR_SCRIPT } from "./trip-animator";
 import {
   THEME_CSS,
@@ -21,7 +22,9 @@ const OVERFLOW_HIDDEN_STYLE_TAG =
 // websandbox bootstrap and sandbox.run-injected scripts; script-src and
 // connect-src are restricted to the four CDN origins so generated code cannot
 // load from arbitrary origins. Map images may use the explicit USGS tile host.
-export const CSP_META_TAG = `<meta http-equiv="Content-Security-Policy" content="
+export const CSP_META_TAG = AIR_GAP_MODE
+  ? `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; base-uri 'none'; form-action 'none';">`
+  : `<meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
     script-src 'unsafe-inline' 'unsafe-eval'
       https://cdnjs.cloudflare.com
@@ -53,7 +56,7 @@ export function ensureHead(html: string): string {
 export function buildFinalFrameContent(html: string, css?: string): string {
   const headContent =
     CSP_META_TAG +
-    IMPORTMAP_SCRIPT_TAG +
+    (AIR_GAP_MODE ? "" : IMPORTMAP_SCRIPT_TAG) +
     TRIP_ANIMATOR_SCRIPT +
     DESIGN_SYSTEM_STYLE_TAG +
     (css ? `<style>${css}</style>` : "");
@@ -74,7 +77,7 @@ export function buildPreviewHeadContent(
   css?: string,
   previewStyles?: string
 ): string {
-  const parts = [OVERFLOW_HIDDEN_STYLE_TAG, DESIGN_SYSTEM_STYLE_TAG];
+  const parts = [...(AIR_GAP_MODE ? [CSP_META_TAG] : []), OVERFLOW_HIDDEN_STYLE_TAG, DESIGN_SYSTEM_STYLE_TAG];
   if (css) parts.push(`<style>${css}</style>`);
   if (previewStyles) parts.push(previewStyles);
   return parts.join("");

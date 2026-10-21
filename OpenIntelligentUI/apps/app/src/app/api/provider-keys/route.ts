@@ -12,6 +12,9 @@ const reply = (body: object, status: number) => Response.json(body, {
 });
 
 export async function POST(request: Request) {
+  if (process.env.NEXT_PUBLIC_AIR_GAP_MODE === "true") {
+    return reply({ error: "Browser provider keys are disabled in internal mode." }, 403);
+  }
   let credentials;
   try {
     credentials = readProviderHeaders(request.headers);

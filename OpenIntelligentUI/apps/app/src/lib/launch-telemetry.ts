@@ -30,7 +30,7 @@ const EVENTS: Record<Kind, { name: string; properties: Record<string, string> }>
 
 export function telemetryEnabled(env: Env): boolean {
   const off = (key: string) => ["true", "1"].includes(env[key] ?? "");
-  return !(off("DO_NOT_TRACK") || off("COPILOTKIT_TELEMETRY_DISABLED") || env.COPILOTKIT_TELEMETRY_SAMPLE_RATE === "0");
+  return !(off("NEXT_PUBLIC_AIR_GAP_MODE") || off("DO_NOT_TRACK") || off("COPILOTKIT_TELEMETRY_DISABLED") || env.COPILOTKIT_TELEMETRY_SAMPLE_RATE === "0");
 }
 
 export function telemetryDistribution(env: Env): Distribution {

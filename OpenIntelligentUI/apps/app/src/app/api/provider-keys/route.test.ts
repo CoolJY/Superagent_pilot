@@ -39,3 +39,11 @@ describe("provider key validation proxy", () => {
     expect(response.status).toBe(502); expect(await response.text()).not.toContain("openai-test-secret");
   });
 });
+
+it("rejects cloud key validation before making a network request in internal mode", async () => {
+  const fetchMock = vi.fn(); vi.stubGlobal("fetch", fetchMock);
+  vi.stubEnv("NEXT_PUBLIC_AIR_GAP_MODE", "true");
+  const response = await POST(new Request("http://localhost/api/provider-keys", { method: "POST" }));
+  expect(response.status).toBe(403);
+  expect(fetchMock).not.toHaveBeenCalled();
+});

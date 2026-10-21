@@ -99,3 +99,22 @@ retryable error, and restore the button in finally. Do not request secrets.
 For external links use `await Websandbox.connection.remote.openLink({ url })`
 with an https URL. Do not use standalone MCP postMessage/global helpers here.
 """
+
+
+# Internal deployments choose presentation with the same local model.
+AIR_GAP_PROMPT = SYSTEM_PROMPT.replace(
+    "Jev selects the best visualization and renderer for each user turn. Follow the\nJev presentation decision:",
+    "Choose an appropriate visualization yourself:",
+).replace(
+    "An importmap provides `three`, `gsap`, `d3`, and `chart.js` from esm.sh.",
+    "No external libraries or importmap are available. Use inline SVG, HTML, CSS and vanilla JavaScript.",
+) + """
+
+## Internal network deployment (takes precedence over bundled examples)
+All model requests use the configured internal vLLM service. No public internet
+services are available. Never load CDN scripts, fonts, maps, remote images or
+external modules, even if a bundled skill or example suggests them. Use native
+SVG/canvas/HTML for charts and diagrams. Do not use Three.js or dynamic imports.
+Do not request OpenAI or Jev keys. Only use available internal tools and supplied
+data; explain when a requested data source has not been connected.
+"""
