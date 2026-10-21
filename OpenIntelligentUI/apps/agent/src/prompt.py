@@ -111,7 +111,7 @@ AIR_GAP_PROMPT = SYSTEM_PROMPT.replace(
 ) + """
 
 ## Internal network deployment (takes precedence over bundled examples)
-All model requests use the configured internal vLLM service. No public internet
+All model requests use the configured internal model service. No public internet
 services are available. Never load CDN scripts, fonts, maps, remote images or
 external modules, even if a bundled skill or example suggests them. Use native
 SVG/canvas/HTML for charts and diagrams. Do not use Three.js or dynamic imports.
@@ -124,6 +124,6 @@ SERVER_MODEL_PROMPT = AIR_GAP_PROMPT.replace(
     "## Internal network deployment (takes precedence over bundled examples)",
     "## Server-configured model (takes precedence over bundled examples)",
 ).replace(
-    "All model requests use the configured internal vLLM service. No public internet\nservices are available.",
+    "All model requests use the configured internal model service. No public internet\nservices are available.",
     "All model requests use the server-configured model API. No browsing or external data tools are connected.",
 )

@@ -44,8 +44,9 @@ def test_openai_stream_uses_selected_endpoint_and_key_without_jev(openai_env, mo
     assert client.post('/credentials/validate').status_code == 403
 
 
-def test_vllm_switch_requires_only_configuration(openai_env, monkeypatch):
-    monkeypatch.setenv('LLM_PROVIDER', 'vllm')
+@pytest.mark.parametrize('provider', ['vllm', 'ollama'])
+def test_local_model_switch_requires_only_configuration(openai_env, monkeypatch, provider):
+    monkeypatch.setenv('LLM_PROVIDER', provider)
     monkeypatch.setenv('AIR_GAP_MODE', 'true')
     monkeypatch.setenv('LLM_BASE_URL', 'http://internal:8000/v1')
     monkeypatch.setenv('LLM_MODEL', 'local/model')

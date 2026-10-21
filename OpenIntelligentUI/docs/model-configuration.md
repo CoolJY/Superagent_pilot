@@ -70,3 +70,21 @@ LLM_API_KEY=
 
 분석 수집, Jev API, 외부 이미지 도구는 두 서버 관리 모드 모두 비활성화합니다.
 기존 `LLM_PROVIDER=auto`는 이전 BYOK 데모 호환용이며 이번 파일럿에서는 사용하지 않습니다.
+
+
+## 로컬 Ollama 연결
+
+OpenAI 호환 `/v1` 주소를 사용합니다. 로컬 Ollama는 인증 키 없이 연결할 수 있습니다.
+현재 PC에서 확인한 설정은 다음과 같습니다. 다른 PC에서는 설치된 모델 이름으로 바꾸세요.
+
+```dotenv
+AIR_GAP_MODE=true
+LLM_PROVIDER=ollama
+LLM_BASE_URL=http://127.0.0.1:11434/v1
+LLM_MODEL=qwen3.8:27b
+LLM_API_KEY=
+```
+
+웹 앱의 `NEXT_PUBLIC_MODEL_LABEL`은 `Ollama · qwen3.8:27b`로 설정할 수 있습니다.
+도구 호출을 지원하는 모델이 필요합니다. Ollama 연결도 동일한 서버 설정 파일에서 관리합니다.
+API 형식은 [Ollama 공식 문서](https://docs.ollama.com/api/openai-compatibility)를 따릅니다.
