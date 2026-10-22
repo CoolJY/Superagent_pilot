@@ -19,21 +19,35 @@ DEFAULT_MODEL = "chat-latest"
 MAX_TOKENS = 64000
 
 
+def _request_timeout(provider: str) -> float:
+    # Large local models can spend minutes processing the initial tool context.
+    timeout = float(os.getenv("LLM_TIMEOUT_SECONDS", "600" if provider == "ollama" else "120"))
+    if not 0 < timeout < float("inf"):
+        raise ValueError("LLM_TIMEOUT_SECONDS must be a positive finite number.")
+    return timeout
+
+
 def build_model(*, allow_unconfigured: bool = False) -> BaseChatModel:
     from src.deployment import air_gap_enabled, configured_model_settings
 
     provider = os.getenv("LLM_PROVIDER", "auto").strip().lower()
     if air_gap_enabled() and provider not in {"vllm", "ollama"}:
         raise ValueError("AIR_GAP_MODE requires LLM_PROVIDER=vllm or ollama.")
-    if provider in {"openai", "gemini", "vllm", "ollama"}:
+    if provider == "gemini":
+        from langchain_google_genai import ChatGoogleGenerativeAI
+
+        model_name, base_url, key = configured_model_settings()
+        return ChatGoogleGenerativeAI(
+            model=model_name, google_api_key=key, vertexai=False,
+            base_url=base_url, client_args={"trust_env": False},
+            timeout=_request_timeout(provider),
+        )
+    if provider in {"openai", "vllm", "ollama"}:
         from langchain_openai import ChatOpenAI
         from openai import OpenAI, AsyncOpenAI, DefaultHttpxClient, DefaultAsyncHttpxClient
 
         model_name, base_url, key = configured_model_settings()
-        # Large local models can spend minutes processing the initial tool context.
-        timeout = float(os.getenv("LLM_TIMEOUT_SECONDS", "600" if provider == "ollama" else "120"))
-        if not 0 < timeout < float("inf"):
-            raise ValueError("LLM_TIMEOUT_SECONDS must be a positive finite number.")
+        timeout = _request_timeout(provider)
         options = dict(api_key=key, base_url=base_url, organization="", project="",
                        default_headers={"Authorization": f"Bearer {key}"},
                        timeout=timeout, max_retries=1)

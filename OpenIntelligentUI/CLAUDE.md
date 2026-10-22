@@ -29,7 +29,7 @@ Use the existing validated `Websandbox.connection.remote.sendPrompt({ text })` a
 
 ## Configuration and checks
 
-Superagent Pilot defaults to the server-managed Gemini profile: `LLM_PROVIDER=gemini`, `LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai`, `LLM_MODEL=gemini-3.5-flash-lite`, `GEMINI_API_KEY` in the ignored agent `.env`. See `docs/model-configuration.md`.
+Superagent Pilot defaults to the server-managed Gemini profile: `LLM_PROVIDER=gemini`, `LLM_BASE_URL=https://generativelanguage.googleapis.com`, `LLM_MODEL=gemini-3.5-flash-lite`, `GEMINI_API_KEY` in the ignored agent `.env`. See `docs/model-configuration.md`.
 
 Superagent Pilot internal profile: `AIR_GAP_MODE=true`, `LLM_PROVIDER=vllm`, explicit `LLM_BASE_URL` ending in `/v1`, and `LLM_MODEL` matching the served model. `LLM_API_KEY` is optional for unauthenticated vLLM only. Frontend builds require `NEXT_PUBLIC_AIR_GAP_MODE=true`. See `docs/internal-deployment.md`.
 

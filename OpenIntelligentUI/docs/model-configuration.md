@@ -1,6 +1,6 @@
 # 모델 연결 설정
 
-현재 기본 설정은 Gemini API의 `gemini-3.5-flash-lite`입니다. [Google 공식 호환 API 문서](https://ai.google.dev/gemini-api/docs/openai/)에 나온 OpenAI 호환 주소를 사용해 기존 채팅 구조를 유지합니다.
+현재 기본 설정은 Gemini API의 `gemini-3.5-flash-lite`입니다. 도구 호출 시 필요한 사고 서명을 보존하기 위해 [Google 모델 전용 연결](https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures)을 사용합니다.
 
 ## 지금: Gemini 연결
 
@@ -17,7 +17,7 @@ cp apps/app/.env.example apps/app/.env.local
 ```dotenv
 AIR_GAP_MODE=false
 LLM_PROVIDER=gemini
-LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai
+LLM_BASE_URL=https://generativelanguage.googleapis.com
 LLM_MODEL=gemini-3.5-flash-lite
 GEMINI_API_KEY=
 ```

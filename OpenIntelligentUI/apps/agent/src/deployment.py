@@ -25,7 +25,7 @@ def configured_model_settings() -> tuple[str, str, str]:
         "OPENAI_BASE_URL", "https://api.openai.com/v1" if provider == "openai" else ""
     )).strip().rstrip("/")
     if provider == "gemini" and "LLM_BASE_URL" not in os.environ:
-        base_url = "https://generativelanguage.googleapis.com/v1beta/openai"
+        base_url = "https://generativelanguage.googleapis.com"
     url = urlsplit(base_url)
     if not model:
         raise ValueError("LLM_MODEL must name the served model.")
@@ -34,8 +34,8 @@ def configured_model_settings() -> tuple[str, str, str]:
         raise ValueError("LLM_BASE_URL must be an explicit http(s) URL without credentials or query strings.")
     if provider == "gemini":
         if (url.scheme != "https" or url.hostname != "generativelanguage.googleapis.com"
-                or url.port is not None or url.path != "/v1beta/openai"):
-            raise ValueError("Gemini LLM_BASE_URL must be https://generativelanguage.googleapis.com/v1beta/openai.")
+                or url.port is not None or url.path):
+            raise ValueError("Gemini LLM_BASE_URL must be https://generativelanguage.googleapis.com.")
         # Never reuse LLM_API_KEY: it may still hold an OpenAI secret.
         key = os.getenv("GEMINI_API_KEY", "").strip()
         if not key:
